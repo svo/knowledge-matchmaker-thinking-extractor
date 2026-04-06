@@ -1,27 +1,22 @@
 import sys
+
+import anthropic
 import uvicorn
 from fastapi import FastAPI
 from lagom import Container
 
-from knowledge_matchmaker_thinking_extractor.application.use_case.coconut_use_case import CreateCoconutUseCase, GetCoconutUseCase
+from knowledge_matchmaker_thinking_extractor.application.use_case.extract_thinking_use_case import ExtractThinkingUseCase
 from knowledge_matchmaker_thinking_extractor.application.use_case.health_use_case import HealthUseCase
 from knowledge_matchmaker_thinking_extractor.domain.health.health_checker import HealthChecker
-from knowledge_matchmaker_thinking_extractor.domain.repository.coconut_repository import CoconutCommandRepository, CoconutQueryRepository
-from knowledge_matchmaker_thinking_extractor.infrastructure.persistence.in_memory.in_memory_coconut_command_repository import (
-    InMemoryCoconutCommandRepository,
-)
-from knowledge_matchmaker_thinking_extractor.infrastructure.persistence.in_memory.in_memory_coconut_query_repository import (
-    InMemoryCoconutQueryRepository,
-)
+from knowledge_matchmaker_thinking_extractor.domain.port.thinking_extractor_port import ThinkingExtractorPort
+from knowledge_matchmaker_thinking_extractor.infrastructure.llm.claude_thinking_extractor import ClaudeThinkingExtractor
 from knowledge_matchmaker_thinking_extractor.infrastructure.security.basic_authentication import (
     BasicAuthenticator,
     SecurityDependency,
     get_basic_authenticator,
 )
 from knowledge_matchmaker_thinking_extractor.infrastructure.system.health_factory import create_health_checker
-from knowledge_matchmaker_thinking_extractor.interface.api.controller.coconut_controller import (
-    create_coconut_controller,
-)
+from knowledge_matchmaker_thinking_extractor.interface.api.controller.extract_controller import create_extract_controller
 from knowledge_matchmaker_thinking_extractor.interface.api.controller.health_controller import create_health_controller
 from knowledge_matchmaker_thinking_extractor.shared.configuration import get_application_setting_provider
 
@@ -31,14 +26,11 @@ app = FastAPI(title="Knowledge Matchmaker Thinking Extractor API", version="1.0.
 def get_container() -> Container:
     container = Container()
 
-    query_repo = InMemoryCoconutQueryRepository()
-    command_repo = InMemoryCoconutCommandRepository(query_repo)
+    anthropic_client = anthropic.Anthropic()
+    extractor = ClaudeThinkingExtractor(client=anthropic_client)
 
-    container[CoconutQueryRepository] = lambda: query_repo  # type: ignore
-    container[CoconutCommandRepository] = lambda: command_repo  # type: ignore
-
-    container[GetCoconutUseCase] = GetCoconutUseCase
-    container[CreateCoconutUseCase] = CreateCoconutUseCase
+    container[ThinkingExtractorPort] = lambda: extractor  # type: ignore
+    container[ExtractThinkingUseCase] = ExtractThinkingUseCase
 
     authenticator = get_basic_authenticator()
     security_dependency = SecurityDependency(authenticator)
@@ -46,7 +38,6 @@ def get_container() -> Container:
     container[SecurityDependency] = lambda: security_dependency
 
     health_checker = create_health_checker()
-
     container[HealthChecker] = lambda: health_checker  # type: ignore
     container[HealthUseCase] = HealthUseCase
 
@@ -63,8 +54,9 @@ def get_global_container() -> Container:
 security_dependency = global_container[SecurityDependency]
 authentication_dependency = security_dependency.authentication_dependency()
 
-coconut_controller = create_coconut_controller(global_container, authentication_dependency)
-app.include_router(coconut_controller.router)
+extract_use_case = global_container[ExtractThinkingUseCase]
+extract_router = create_extract_controller(extract_use_case)
+app.include_router(extract_router)
 
 health_use_case = global_container[HealthUseCase]
 health_controller = create_health_controller(health_use_case)
