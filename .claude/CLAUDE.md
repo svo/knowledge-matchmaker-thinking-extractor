@@ -1,4 +1,17 @@
-# Python Sprint Zero - Claude Code Instructions
+# Knowledge Matchmaker Thinking Extractor - Claude Code Instructions
+
+## Project Purpose
+
+Extracts structured epistemic positions from user-submitted drafts, notes, or bullet points. Runs on port 8001. Produces the structured representation of "the user's thinking" that all downstream services operate on — this is the input side of the knowledge matchmaking pipeline.
+
+### Core Domain Concepts
+
+- `Draft` — raw user input (text, notes, bullet points)
+- `ExtractedThinking` — structured output containing the user's positions
+- `Position` — a single epistemic stance: a core claim, implicit assumption, or key framing
+- `Claim` — an explicit assertion the user is making
+- `Assumption` — a premise the user's argument rests on but hasn't stated directly
+- `Framing` — the conceptual lens or vocabulary the user is working within
 
 ## Absolute Non-Negotiables
 
