@@ -1,7 +1,9 @@
-from pydantic import BaseModel
+from __future__ import annotations
+
+from pydantic import BaseModel, Field
+
+from knowledge_matchmaker_thinking_extractor.domain.model.position import Position
 
 
 class ExtractedThinking(BaseModel):
-    claims: list[str]
-    assumptions: list[str]
-    framings: list[str]
+    positions: list[Position] = Field(default_factory=list)

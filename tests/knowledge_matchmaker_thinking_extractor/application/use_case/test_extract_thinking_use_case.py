@@ -1,31 +1,48 @@
+from __future__ import annotations
+
 from unittest.mock import Mock
 
+import pytest
 from assertpy import assert_that
 
 from knowledge_matchmaker_thinking_extractor.application.use_case.extract_thinking_use_case import ExtractThinkingUseCase
 from knowledge_matchmaker_thinking_extractor.domain.model.draft import Draft
 from knowledge_matchmaker_thinking_extractor.domain.model.extracted_thinking import ExtractedThinking
-from knowledge_matchmaker_thinking_extractor.domain.port.thinking_extractor_port import ThinkingExtractorPort
+from knowledge_matchmaker_thinking_extractor.domain.model.position import Position, PositionType
+from knowledge_matchmaker_thinking_extractor.domain.service.thinking_extractor import ThinkingExtractor
 
 
 class TestExtractThinkingUseCase:
-    def test_should_call_extractor_when_executed(self) -> None:
-        mock_extractor = Mock(spec=ThinkingExtractorPort)
-        mock_extractor.extract.return_value = ExtractedThinking(claims=[], assumptions=[], framings=[])
-        use_case = ExtractThinkingUseCase(extractor=mock_extractor)
-        draft = Draft(text="test draft")
+    @pytest.fixture
+    def mock_thinking_extractor(self) -> Mock:
+        return Mock(spec=ThinkingExtractor)
+
+    @pytest.fixture
+    def use_case(self, mock_thinking_extractor: Mock) -> ExtractThinkingUseCase:
+        return ExtractThinkingUseCase(thinking_extractor=mock_thinking_extractor)
+
+    @pytest.fixture
+    def draft(self) -> Draft:
+        return Draft(text="some draft text")
+
+    @pytest.fixture
+    def extracted_thinking(self) -> ExtractedThinking:
+        return ExtractedThinking(positions=[Position(text="a claim", position_type=PositionType.CLAIM)])
+
+    def test_should_call_extractor_with_draft(
+        self, use_case: ExtractThinkingUseCase, mock_thinking_extractor: Mock, draft: Draft, extracted_thinking: ExtractedThinking
+    ) -> None:
+        mock_thinking_extractor.extract.return_value = extracted_thinking
 
         use_case.execute(draft)
 
-        mock_extractor.extract.assert_called_once_with(draft)
+        mock_thinking_extractor.extract.assert_called_once_with(draft)
 
-    def test_should_return_extracted_thinking_when_executed(self) -> None:
-        mock_extractor = Mock(spec=ThinkingExtractorPort)
-        expected = ExtractedThinking(claims=["claim"], assumptions=[], framings=[])
-        mock_extractor.extract.return_value = expected
-        use_case = ExtractThinkingUseCase(extractor=mock_extractor)
-        draft = Draft(text="test draft")
+    def test_should_return_extracted_thinking(
+        self, use_case: ExtractThinkingUseCase, mock_thinking_extractor: Mock, draft: Draft, extracted_thinking: ExtractedThinking
+    ) -> None:
+        mock_thinking_extractor.extract.return_value = extracted_thinking
 
         result = use_case.execute(draft)
 
-        assert_that(result).is_equal_to(expected)
+        assert_that(result).is_equal_to(extracted_thinking)
