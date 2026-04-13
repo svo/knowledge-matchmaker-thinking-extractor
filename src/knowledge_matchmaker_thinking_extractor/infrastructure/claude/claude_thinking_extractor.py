@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import os
+from typing import Any, Dict, List, cast
 
 import anthropic
+from anthropic.types import ToolChoiceToolParam, ToolParam
 
 from knowledge_matchmaker_thinking_extractor.domain.model.draft import Draft
 from knowledge_matchmaker_thinking_extractor.domain.model.extracted_thinking import ExtractedThinking
 from knowledge_matchmaker_thinking_extractor.domain.model.position import Position, PositionType
 from knowledge_matchmaker_thinking_extractor.domain.service.thinking_extractor import ThinkingExtractor
 
-_EXTRACT_POSITIONS_TOOL = {
+_EXTRACT_POSITIONS_TOOL: ToolParam = {
     "name": "extract_positions",
     "description": "Extract epistemic positions from a draft text",
     "input_schema": {
@@ -58,16 +60,14 @@ class ClaudeThinkingExtractor(ThinkingExtractor):
             max_tokens=1024,
             system=_SYSTEM_PROMPT,
             tools=[_EXTRACT_POSITIONS_TOOL],
-            tool_choice={"type": "tool", "name": "extract_positions"},
+            tool_choice=ToolChoiceToolParam(type="tool", name="extract_positions"),
             messages=[{"role": "user", "content": draft.text}],
         )
 
         tool_use_block = next(block for block in response.content if block.type == "tool_use")
-        raw_positions = tool_use_block.input["positions"]
+        tool_input = cast(Dict[str, Any], tool_use_block.input)
+        raw_positions: List[Dict[str, str]] = tool_input["positions"]
 
-        positions = [
-            Position(text=p["text"], position_type=PositionType(p["position_type"]))
-            for p in raw_positions
-        ]
+        positions = [Position(text=p["text"], position_type=PositionType(p["position_type"])) for p in raw_positions]
 
         return ExtractedThinking(positions=positions)

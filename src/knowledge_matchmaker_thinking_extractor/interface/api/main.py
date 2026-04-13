@@ -3,11 +3,15 @@ import uvicorn
 from fastapi import FastAPI
 from lagom import Container
 
-from knowledge_matchmaker_thinking_extractor.application.use_case.extract_thinking_use_case import ExtractThinkingUseCase
+from knowledge_matchmaker_thinking_extractor.application.use_case.extract_thinking_use_case import (
+    ExtractThinkingUseCase,
+)
 from knowledge_matchmaker_thinking_extractor.application.use_case.health_use_case import HealthUseCase
 from knowledge_matchmaker_thinking_extractor.domain.health.health_checker import HealthChecker
 from knowledge_matchmaker_thinking_extractor.domain.service.thinking_extractor import ThinkingExtractor
-from knowledge_matchmaker_thinking_extractor.infrastructure.claude.claude_thinking_extractor import ClaudeThinkingExtractor
+from knowledge_matchmaker_thinking_extractor.infrastructure.claude.claude_thinking_extractor import (
+    ClaudeThinkingExtractor,
+)
 from knowledge_matchmaker_thinking_extractor.infrastructure.security.basic_authentication import (
     BasicAuthenticator,
     SecurityDependency,

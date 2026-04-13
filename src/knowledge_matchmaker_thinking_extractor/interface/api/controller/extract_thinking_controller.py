@@ -4,7 +4,9 @@ from fastapi import APIRouter
 
 from lagom import Container
 
-from knowledge_matchmaker_thinking_extractor.application.use_case.extract_thinking_use_case import ExtractThinkingUseCase
+from knowledge_matchmaker_thinking_extractor.application.use_case.extract_thinking_use_case import (
+    ExtractThinkingUseCase,
+)
 from knowledge_matchmaker_thinking_extractor.domain.model.draft import Draft
 from knowledge_matchmaker_thinking_extractor.interface.api.data_transfer_object.extract_thinking_data_transfer_object import (
     ExtractThinkingRequestDto,

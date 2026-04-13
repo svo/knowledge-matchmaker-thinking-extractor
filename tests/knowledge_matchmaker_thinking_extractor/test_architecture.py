@@ -101,7 +101,9 @@ def test_should_maintain_shared_module_independence():
         )
         .match("knowledge_matchmaker_thinking_extractor.shared.*")
         .should_not_import(
-            "knowledge_matchmaker_thinking_extractor.application.*", "knowledge_matchmaker_thinking_extractor.infrastructure.*", "knowledge_matchmaker_thinking_extractor.interface.*"
+            "knowledge_matchmaker_thinking_extractor.application.*",
+            "knowledge_matchmaker_thinking_extractor.infrastructure.*",
+            "knowledge_matchmaker_thinking_extractor.interface.*",
         )
         .check("knowledge_matchmaker_thinking_extractor")
     )

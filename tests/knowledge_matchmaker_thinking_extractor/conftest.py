@@ -1,6 +1,9 @@
 import pytest
 
-from knowledge_matchmaker_thinking_extractor.infrastructure.security.basic_authentication import BasicAuthenticator, SecurityDependency
+from knowledge_matchmaker_thinking_extractor.infrastructure.security.basic_authentication import (
+    BasicAuthenticator,
+    SecurityDependency,
+)
 
 
 @pytest.fixture
