@@ -38,32 +38,91 @@ class TestExtractThinkingController:
         return TestClient(app)
 
     @pytest.fixture
-    def extracted_thinking(self) -> ExtractedThinking:
-        return ExtractedThinking(positions=[Position(text="a claim", position_type=PositionType.CLAIM)])
+    def extracted_thinking_with_all_types(self) -> ExtractedThinking:
+        return ExtractedThinking(
+            positions=[
+                Position(text="a claim", position_type=PositionType.CLAIM),
+                Position(text="an assumption", position_type=PositionType.ASSUMPTION),
+                Position(text="a framing", position_type=PositionType.FRAMING),
+            ]
+        )
 
     def test_should_return_200_when_extract_is_called(
-        self, client: TestClient, mock_use_case: Mock, extracted_thinking: ExtractedThinking
+        self,
+        client: TestClient,
+        mock_use_case: Mock,
+        extracted_thinking_with_all_types: ExtractedThinking,
     ) -> None:
-        mock_use_case.execute.return_value = extracted_thinking
+        mock_use_case.execute.return_value = extracted_thinking_with_all_types
 
-        response = client.post("/extract", json={"text": "some draft text"})
+        response = client.post("/extract", json={"draft": "some draft text"})
 
         assert_that(response.status_code).is_equal_to(200)
 
-    def test_should_return_positions_in_response(
-        self, client: TestClient, mock_use_case: Mock, extracted_thinking: ExtractedThinking
+    def test_should_return_claims_in_response(
+        self,
+        client: TestClient,
+        mock_use_case: Mock,
+        extracted_thinking_with_all_types: ExtractedThinking,
     ) -> None:
-        mock_use_case.execute.return_value = extracted_thinking
+        mock_use_case.execute.return_value = extracted_thinking_with_all_types
 
+        response = client.post("/extract", json={"draft": "some draft text"})
+
+        assert_that(response.json()["claims"]).is_equal_to(["a claim"])
+
+    def test_should_return_assumptions_in_response(
+        self,
+        client: TestClient,
+        mock_use_case: Mock,
+        extracted_thinking_with_all_types: ExtractedThinking,
+    ) -> None:
+        mock_use_case.execute.return_value = extracted_thinking_with_all_types
+
+        response = client.post("/extract", json={"draft": "some draft text"})
+
+        assert_that(response.json()["assumptions"]).is_equal_to(["an assumption"])
+
+    def test_should_return_framings_in_response(
+        self,
+        client: TestClient,
+        mock_use_case: Mock,
+        extracted_thinking_with_all_types: ExtractedThinking,
+    ) -> None:
+        mock_use_case.execute.return_value = extracted_thinking_with_all_types
+
+        response = client.post("/extract", json={"draft": "some draft text"})
+
+        assert_that(response.json()["framings"]).is_equal_to(["a framing"])
+
+    def test_should_not_include_positions_key_in_response(
+        self,
+        client: TestClient,
+        mock_use_case: Mock,
+        extracted_thinking_with_all_types: ExtractedThinking,
+    ) -> None:
+        mock_use_case.execute.return_value = extracted_thinking_with_all_types
+
+        response = client.post("/extract", json={"draft": "some draft text"})
+
+        assert_that(response.json()).does_not_contain_key("positions")
+
+    def test_should_return_422_when_text_field_is_sent_instead_of_draft(
+        self,
+        client: TestClient,
+    ) -> None:
         response = client.post("/extract", json={"text": "some draft text"})
 
-        assert_that(response.json()["positions"]).is_length(1)
+        assert_that(response.status_code).is_equal_to(422)
 
     def test_should_call_use_case_with_draft_text(
-        self, client: TestClient, mock_use_case: Mock, extracted_thinking: ExtractedThinking
+        self,
+        client: TestClient,
+        mock_use_case: Mock,
+        extracted_thinking_with_all_types: ExtractedThinking,
     ) -> None:
-        mock_use_case.execute.return_value = extracted_thinking
+        mock_use_case.execute.return_value = extracted_thinking_with_all_types
 
-        client.post("/extract", json={"text": "some draft text"})
+        client.post("/extract", json={"draft": "some draft text"})
 
         mock_use_case.execute.assert_called_once_with(Draft(text="some draft text"))

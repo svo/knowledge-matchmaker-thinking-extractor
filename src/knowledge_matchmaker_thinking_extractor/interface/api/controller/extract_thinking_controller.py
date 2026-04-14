@@ -29,7 +29,7 @@ class ExtractThinkingController:
         )
 
     async def extract(self, request: ExtractThinkingRequestDto) -> ExtractThinkingResponseDto:
-        draft = Draft(text=request.text)
+        draft = Draft(text=request.draft)
         extracted_thinking = self._extract_thinking_use_case.execute(draft)
         return ExtractThinkingResponseDto.from_domain_model(extracted_thinking)
 
